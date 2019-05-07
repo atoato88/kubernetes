@@ -3549,6 +3549,419 @@ func isNodeConditionSetAsExpected(node *v1.Node, conditionType v1.NodeConditionT
 	return false
 }
 
+/*
+func isNodeConditionSetAsExpected(node *v1.Node, conditionType v1.NodeConditionType, wantTrue, silent bool) bool {
+	// Check the node readiness condition (logging all).
+	for _, cond := range node.Status.Conditions {
+		// Ensure that the condition type and the status matches as desired.
+		if cond.Type == conditionType {
+			// For NodeReady condition we need to check Taints as well
+			if cond.Type == v1.NodeReady {
+				hasNodeControllerTaints := false
+				// For NodeReady we need to check if Taints are gone as well
+				taints := node.Spec.Taints
+				for _, taint := range taints {
+					if taint.MatchTaint(nodectlr.UnreachableTaintTemplate) || taint.MatchTaint(nodectlr.NotReadyTaintTemplate) {
+						hasNodeControllerTaints = true
+						break
+					}
+				}
+				if wantTrue {
+					if (cond.Status == v1.ConditionTrue) && !hasNodeControllerTaints {
+						return true // success pattern
+					} else {
+						msg := ""
+						if !hasNodeControllerTaints {
+							msg = fmt.Sprintf("Condition %s of node %s is %v instead of %t. Reason: %v, message: %v",
+								conditionType, node.Name, cond.Status == v1.ConditionTrue, wantTrue, cond.Reason, cond.Message)
+						} else {
+							msg = fmt.Sprintf("Condition %s of node %s is %v, but Node is tainted by NodeController with %v. Failure",
+								conditionType, node.Name, cond.Status == v1.ConditionTrue, taints)
+						}
+						if !silent {
+							Logf(msg)
+						}
+						return false // failure pattern
+					}
+				} else {
+					// TODO: check if the Node is tainted once we enable NC notReady/unreachable taints by default
+					if cond.Status != v1.ConditionTrue {
+						return true // success pattern
+					}
+					if !silent {
+						Logf("Condition %s of node %s is %v instead of %t. Reason: %v, message: %v",
+							conditionType, node.Name, cond.Status == v1.ConditionTrue, wantTrue, cond.Reason, cond.Message)
+					}
+					return false // failure pattern
+				}
+			}
+			if (wantTrue && (cond.Status == v1.ConditionTrue)) || (!wantTrue && (cond.Status != v1.ConditionTrue)) {
+				return true // success pattern
+			} else {
+				if !silent {
+					Logf("Condition %s of node %s is %v instead of %t. Reason: %v, message: %v",
+						conditionType, node.Name, cond.Status == v1.ConditionTrue, wantTrue, cond.Reason, cond.Message)
+				}
+				return false // failure pattern
+			}
+		}
+
+	}
+	if !silent {
+		Logf("Couldn't find condition %v on node %v", conditionType, node.Name)
+	}
+	return false
+}
+*/
+
+/*
+func isNodeConditionSetAsExpected2(node *v1.Node, conditionType v1.NodeConditionType, wantTrue, silent bool) bool {
+	result := false
+	isFound := false
+	// Check the node readiness condition (logging all).
+	for _, cond := range node.Status.Conditions {
+		if isFound {
+			break
+		}
+		// Ensure that the condition type and the status matches as desired.
+		if cond.Type == conditionType {
+			// For NodeReady condition we need to check Taints as well
+			if cond.Type == v1.NodeReady {
+				hasNodeControllerTaints := false
+				// For NodeReady we need to check if Taints are gone as well
+				taints := node.Spec.Taints
+				for _, taint := range taints {
+					if taint.MatchTaint(nodectlr.UnreachableTaintTemplate) || taint.MatchTaint(nodectlr.NotReadyTaintTemplate) {
+						hasNodeControllerTaints = true
+						break
+					}
+				}
+				if wantTrue {
+					if (cond.Status == v1.ConditionTrue) && !hasNodeControllerTaints {
+						result = true
+						isFound = true
+						continue
+						//return true // success pattern
+					} else {
+						msg := ""
+						if !hasNodeControllerTaints {
+							msg = fmt.Sprintf("Condition %s of node %s is %v instead of %t. Reason: %v, message: %v",
+								conditionType, node.Name, cond.Status == v1.ConditionTrue, wantTrue, cond.Reason, cond.Message)
+						} else {
+							msg = fmt.Sprintf("Condition %s of node %s is %v, but Node is tainted by NodeController with %v. Failure",
+								conditionType, node.Name, cond.Status == v1.ConditionTrue, taints)
+						}
+						if !silent {
+							Logf(msg)
+						}
+						result = false
+						isFound = true
+						continue
+						//return false // failure pattern
+					}
+				} else {
+					// TODO: check if the Node is tainted once we enable NC notReady/unreachable taints by default
+					if cond.Status != v1.ConditionTrue {
+						result = true
+						isFound = true
+						continue
+						//return true // success pattern
+					}
+					if !silent {
+						Logf("Condition %s of node %s is %v instead of %t. Reason: %v, message: %v",
+							conditionType, node.Name, cond.Status == v1.ConditionTrue, wantTrue, cond.Reason, cond.Message)
+					}
+					result = false
+					isFound = true
+					continue
+					//return false // failure pattern
+				}
+			}
+			if (wantTrue && (cond.Status == v1.ConditionTrue)) || (!wantTrue && (cond.Status != v1.ConditionTrue)) {
+				return true // success pattern
+			}
+			if !silent {
+				Logf("Condition %s of node %s is %v instead of %t. Reason: %v, message: %v",
+					conditionType, node.Name, cond.Status == v1.ConditionTrue, wantTrue, cond.Reason, cond.Message)
+			}
+			return false // failure pattern
+		}
+	}
+	if isFound {
+		return result
+	}
+
+	if !silent {
+		Logf("Couldn't find condition %v on node %v", conditionType, node.Name)
+	}
+	return false
+}
+
+func isNodeConditionSetAsExpected3(node *v1.Node, conditionType v1.NodeConditionType, wantTrue, silent bool) bool {
+	result := false
+	isFound := false
+	// Check the node readiness condition (logging all).
+	for _, cond := range node.Status.Conditions {
+		if isFound {
+			break
+		}
+		// Ensure that the condition type and the status matches as desired.
+		if cond.Type == conditionType {
+			// For NodeReady condition we need to check Taints as well
+			if cond.Type == v1.NodeReady {
+				hasNodeControllerTaints := false
+				// For NodeReady we need to check if Taints are gone as well
+				taints := node.Spec.Taints
+				for _, taint := range taints {
+					if taint.MatchTaint(nodectlr.UnreachableTaintTemplate) || taint.MatchTaint(nodectlr.NotReadyTaintTemplate) {
+						hasNodeControllerTaints = true
+						break
+					}
+				}
+				if wantTrue {
+					if (cond.Status == v1.ConditionTrue) && !hasNodeControllerTaints {
+						result = true
+						isFound = true
+						continue
+					} else {
+						if !hasNodeControllerTaints {
+							printLog(fmt.Sprintf("Condition %s of node %s is %v instead of %t. Reason: %v, message: %v",
+								conditionType, node.Name, cond.Status == v1.ConditionTrue, wantTrue, cond.Reason, cond.Message), silent)
+						} else {
+							printLog(fmt.Sprintf("Condition %s of node %s is %v, but Node is tainted by NodeController with %v. Failure",
+								conditionType, node.Name, cond.Status == v1.ConditionTrue, taints), silent)
+						}
+						result = false
+						isFound = true
+						continue
+					}
+				} else {
+					// TODO: check if the Node is tainted once we enable NC notReady/unreachable taints by default
+					if cond.Status != v1.ConditionTrue {
+						result = true
+						isFound = true
+						continue
+					}
+					printLog(fmt.Sprintf("Condition %s of node %s is %v instead of %t. Reason: %v, message: %v",
+						conditionType, node.Name, cond.Status == v1.ConditionTrue, wantTrue, cond.Reason, cond.Message), silent)
+					result = false
+					isFound = true
+					continue
+				}
+			}
+			if (wantTrue && (cond.Status == v1.ConditionTrue)) || (!wantTrue && (cond.Status != v1.ConditionTrue)) {
+				return true
+			}
+			printLog(fmt.Sprintf("Condition %s of node %s is %v instead of %t. Reason: %v, message: %v",
+				conditionType, node.Name, cond.Status == v1.ConditionTrue, wantTrue, cond.Reason, cond.Message), silent)
+			return false
+		}
+	}
+	if isFound {
+		return result
+	}
+
+	printLog(fmt.Sprintf("Couldn't find condition %v on node %v", conditionType, node.Name), silent)
+	return false
+}*/
+
+func isConditionMatch(wantTrue bool, status v1.ConditionStatus, hasNodeControllerTaints bool, condType v1.NodeConditionType) bool {
+	result := false
+	if wantTrue && (status == v1.ConditionTrue) && !hasNodeControllerTaints {
+		result = true
+	}
+	if !wantTrue && (status != v1.ConditionTrue) {
+		result = true
+	}
+	if (condType != v1.NodeReady) && wantTrue && (status == v1.ConditionTrue) {
+		result = true
+	}
+	if (condType != v1.NodeReady) && !wantTrue && (status != v1.ConditionTrue) {
+		result = true
+	}
+	return result
+}
+
+func printLog(msg string, silent bool) {
+	if !silent {
+		Logf(msg)
+	}
+}
+
+/*
+func isNodeConditionSetAsExpected4(node *v1.Node, conditionType v1.NodeConditionType, wantTrue, silent bool) bool {
+	// Check the node readiness condition (logging all).
+	for _, cond := range node.Status.Conditions {
+		// Ensure that the condition type and the status matches as desired.
+		if cond.Type == conditionType {
+			// For NodeReady condition we need to check Taints as well
+			if cond.Type == v1.NodeReady {
+				hasNodeControllerTaints := false
+				// For NodeReady we need to check if Taints are gone as well
+				taints := node.Spec.Taints
+				for _, taint := range taints {
+					if taint.MatchTaint(nodectlr.UnreachableTaintTemplate) || taint.MatchTaint(nodectlr.NotReadyTaintTemplate) {
+						hasNodeControllerTaints = true
+						break
+					}
+				}
+
+				if wantTrue {
+					if (cond.Status == v1.ConditionTrue) && !hasNodeControllerTaints {
+						return true
+					} else if !hasNodeControllerTaints {
+						printLog(fmt.Sprintf("Condition %s of node %s is %v instead of %t. Reason: %v, message: %v",
+							conditionType, node.Name, cond.Status == v1.ConditionTrue, wantTrue, cond.Reason, cond.Message), silent)
+						return false
+					} else {
+						printLog(fmt.Sprintf("Condition %s of node %s is %v, but Node is tainted by NodeController with %v. Failure",
+							conditionType, node.Name, cond.Status == v1.ConditionTrue, taints), silent)
+						return false
+					}
+					msg := ""
+					if !hasNodeControllerTaints {
+						msg = fmt.Sprintf("Condition %s of node %s is %v instead of %t. Reason: %v, message: %v",
+							conditionType, node.Name, cond.Status == v1.ConditionTrue, wantTrue, cond.Reason, cond.Message)
+					}
+					printLog(fmt.Sprintf("Condition %s of node %s is %v instead of %t. Reason: %v, message: %v",
+						conditionType, node.Name, cond.Status == v1.ConditionTrue, wantTrue, cond.Reason, cond.Message), silent)
+					return false
+				}
+			}
+			if (wantTrue && (cond.Status == v1.ConditionTrue)) || (!wantTrue && (cond.Status != v1.ConditionTrue)) {
+				return true
+			}
+			printLog(fmt.Sprintf("Condition %s of node %s is %v instead of %t. Reason: %v, message: %v",
+				conditionType, node.Name, cond.Status == v1.ConditionTrue, wantTrue, cond.Reason, cond.Message), silent)
+			return false
+		}
+	}
+
+	printLog(fmt.Sprintf("Couldn't find condition %v on node %v", conditionType, node.Name), silent)
+	return false
+}*/
+
+func isNodeConditionSetAsExpected5(node *v1.Node, conditionType v1.NodeConditionType, wantTrue, silent bool) bool {
+	// Check the node readiness condition (logging all).
+	for _, cond := range node.Status.Conditions {
+		// Ensure that the condition type and the status matches as desired.
+		if cond.Type == conditionType {
+			// For NodeReady condition we need to check Taints as well
+			hasNodeControllerTaints := false
+			// For NodeReady we need to check if Taints are gone as well
+			taints := node.Spec.Taints
+			for _, taint := range taints {
+				if taint.MatchTaint(nodectlr.UnreachableTaintTemplate) || taint.MatchTaint(nodectlr.NotReadyTaintTemplate) {
+					hasNodeControllerTaints = true
+					break
+				}
+			}
+
+			if isConditionMatch(wantTrue, cond.Status, hasNodeControllerTaints, cond.Type) {
+				return true
+			}
+
+			if wantTrue {
+				if !hasNodeControllerTaints {
+					printLog(fmt.Sprintf("Condition %s of node %s is %v instead of %t. Reason: %v, message: %v",
+						conditionType, node.Name, cond.Status == v1.ConditionTrue, wantTrue, cond.Reason, cond.Message), silent)
+					return false
+				} else {
+					printLog(fmt.Sprintf("Condition %s of node %s is %v, but Node is tainted by NodeController with %v. Failure",
+						conditionType, node.Name, cond.Status == v1.ConditionTrue, taints), silent)
+					return false
+				}
+			} else {
+				// TODO: check if the Node is tainted once we enable NC notReady/unreachable taints by default
+				printLog(fmt.Sprintf("Condition %s of node %s is %v instead of %t. Reason: %v, message: %v",
+					conditionType, node.Name, cond.Status == v1.ConditionTrue, wantTrue, cond.Reason, cond.Message), silent)
+				return false
+			}
+			//printLog(fmt.Sprintf("Condition %s of node %s is %v instead of %t. Reason: %v, message: %v",
+			//	conditionType, node.Name, cond.Status == v1.ConditionTrue, wantTrue, cond.Reason, cond.Message), silent)
+			//return false
+		}
+	}
+
+	printLog(fmt.Sprintf("Couldn't find condition %v on node %v", conditionType, node.Name), silent)
+	return false
+}
+
+/*
+func isNodeConditionSetAsExpectedRevised(node *v1.Node, conditionType v1.NodeConditionType, wantTrue, silent bool) bool {
+	// Check the node readiness condition (logging all).
+	for _, cond := range node.Status.Conditions {
+		// Ensure that the condition type and the status matches as desired.
+		if cond.Type == conditionType {
+			// For NodeReady condition we need to check Taints as well
+			if cond.Type == v1.NodeReady {
+				hasNodeControllerTaints := false
+				// For NodeReady we need to check if Taints are gone as well
+				taints := node.Spec.Taints
+				for _, taint := range taints {
+					if taint.MatchTaint(nodectlr.UnreachableTaintTemplate) || taint.MatchTaint(nodectlr.NotReadyTaintTemplate) {
+						hasNodeControllerTaints = true
+						break
+					}
+				}
+				//if wantTrue {
+				if (cond.Status == v1.ConditionTrue) && !hasNodeControllerTaints {
+					if !silent {
+						Logf(msg)
+					}
+					return getResult(wantTrue, true)
+				} else {
+					//if cond.Status != v1.ConditionTrue {
+					//	return getResult(wantTrue, false)
+					//}
+					if wantTrue == false && hasNodeControllerTaints && cond.Status == v1.ConditionTrue {
+						return getResult(wantTrue, true)
+					}
+					msg := ""
+					if !hasNodeControllerTaints {
+						msg = fmt.Sprintf("111Condition %s of node %s is %v instead of %t. Reason: %v, message: %v",
+							conditionType, node.Name, cond.Status == v1.ConditionTrue, wantTrue, cond.Reason, cond.Message)
+					} else {
+						msg = fmt.Sprintf("222Condition %s of node %s is %v, but Node is tainted by NodeController with %v. Failure",
+							conditionType, node.Name, cond.Status == v1.ConditionTrue, taints)
+					}
+					if !silent {
+						Logf(msg)
+					}
+					return getResult(wantTrue, false)
+				}
+				//} else {
+				// TODO: check if the Node is tainted once we enable NC notReady/unreachable taints by default
+
+				//}
+			}
+			if (wantTrue && (cond.Status == v1.ConditionTrue)) || (!wantTrue && (cond.Status != v1.ConditionTrue)) {
+				return true
+			} else {
+				if !silent {
+					Logf("333Condition %s of node %s is %v instead of %t. Reason: %v, message: %v",
+						conditionType, node.Name, cond.Status == v1.ConditionTrue, wantTrue, cond.Reason, cond.Message)
+				}
+				return false
+			}
+			if (wantTrue && (cond.Status == v1.ConditionTrue)) || (!wantTrue && (cond.Status != v1.ConditionTrue)) {
+				return true
+			}
+			if !silent {
+				Logf("Condition %s of node %s is %v instead of %t. Reason: %v, message: %v",
+					conditionType, node.Name, cond.Status == v1.ConditionTrue, wantTrue, cond.Reason, cond.Message)
+			}
+			return false
+		}
+
+	}
+	if !silent {
+		Logf("Couldn't find condition %v on node %v", conditionType, node.Name)
+	}
+	return false
+}
+*/
+
 // IsNodeConditionSetAsExpected returns a wantTrue value if the node has a match to the conditionType, otherwise returns an opposite value of the wantTrue with detailed logging.
 func IsNodeConditionSetAsExpected(node *v1.Node, conditionType v1.NodeConditionType, wantTrue bool) bool {
 	return isNodeConditionSetAsExpected(node, conditionType, wantTrue, false)
