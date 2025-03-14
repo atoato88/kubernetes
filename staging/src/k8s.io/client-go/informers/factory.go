@@ -49,6 +49,9 @@ import (
 	storagemigration "k8s.io/client-go/informers/storagemigration"
 	kubernetes "k8s.io/client-go/kubernetes"
 	cache "k8s.io/client-go/tools/cache"
+
+	"log"
+	"runtime/debug"
 )
 
 // SharedInformerOption defines the functional option type for SharedInformerFactory.
@@ -148,6 +151,9 @@ func (f *sharedInformerFactory) Start(stopCh <-chan struct{}) {
 		return
 	}
 
+	log.Printf("yyyyy Start sharedInformerFactory")
+	debug.PrintStack()
+
 	for informerType, informer := range f.informers {
 		if !f.startedInformers[informerType] {
 			f.wg.Add(1)
@@ -165,6 +171,8 @@ func (f *sharedInformerFactory) Start(stopCh <-chan struct{}) {
 }
 
 func (f *sharedInformerFactory) Shutdown() {
+	log.Printf("yyyyy Shutdown sharedInformerFactory")
+	debug.PrintStack()
 	f.lock.Lock()
 	f.shuttingDown = true
 	f.lock.Unlock()

@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
 
@@ -230,6 +231,18 @@ func (gb *GraphBuilder) controllerFor(logger klog.Logger, resource schema.GroupV
 	return shared.Informer().GetController(), shared.Informer().GetStore(), nil
 }
 
+func printType(myvar interface{}, logger klog.Logger) string {
+	if t := reflect.TypeOf(myvar); t.Kind() == reflect.Ptr {
+		result := "*" + t.Elem().Name()
+		logger.V(1).Info("pointer Instance type is: ", "target type", result)
+		return result
+	} else {
+		result := t.Name()
+		logger.V(1).Info("value Instance type is: ", "target type", result)
+		return result
+	}
+}
+
 // syncMonitors rebuilds the monitor set according to the supplied resources,
 // creating or deleting monitors as necessary. It will return any error
 // encountered, but will make an attempt to create a monitor for each resource
@@ -264,6 +277,9 @@ func (gb *GraphBuilder) syncMonitors(logger klog.Logger, resources map[schema.Gr
 			continue
 		}
 		c, s, err := gb.controllerFor(logger, resource, kind)
+		logger.V(1).Info("GVK is: ", kind.String())
+		printType(c, logger)
+
 		if err != nil {
 			errs = append(errs, fmt.Errorf("couldn't start monitor for resource %q: %v", resource, err))
 			continue
@@ -273,10 +289,22 @@ func (gb *GraphBuilder) syncMonitors(logger klog.Logger, resources map[schema.Gr
 	}
 	gb.monitors = current
 
-	for _, monitor := range toRemove {
-		if monitor.stopCh != nil {
+	//for monitorType, monitor := range toRemove {
+	for monitorType, monitor := range toRemove {
+		ch := gb.sharedInformers.Meta().GetChan(monitorType)
+		if strings.Contains(strings.ToLower(monitorType.String()), "dummybook") {
+			logger.V(1).Info("yyyyy close ch for dummybook")
+			close(ch)
+			//close(monitor.stopCh)
+		} else {
 			close(monitor.stopCh)
 		}
+		// if ch != nil {
+		// 	close(ch)
+		// }
+		// if monitor.stopCh != nil {
+		// 	close(monitor.stopCh)
+		// }
 	}
 
 	logger.V(4).Info("synced monitors", "added", added, "kept", kept, "removed", len(toRemove))

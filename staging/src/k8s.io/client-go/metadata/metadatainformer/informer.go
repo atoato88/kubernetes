@@ -30,6 +30,8 @@ import (
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/metadata/metadatalister"
 	"k8s.io/client-go/tools/cache"
+
+	"log"
 )
 
 // SharedInformerOption defines the functional option type for metadataSharedInformerFactory.
@@ -58,6 +60,7 @@ func NewFilteredSharedInformerFactory(client metadata.Interface, defaultResync t
 		informers:        map[schema.GroupVersionResource]informers.GenericInformer{},
 		startedInformers: make(map[schema.GroupVersionResource]bool),
 		tweakListOptions: tweakListOptions,
+		stopChs:          make(map[schema.GroupVersionResource]chan struct{}),
 	}
 }
 
@@ -69,6 +72,7 @@ func NewSharedInformerFactoryWithOptions(client metadata.Interface, defaultResyn
 		defaultResync:    defaultResync,
 		informers:        map[schema.GroupVersionResource]informers.GenericInformer{},
 		startedInformers: make(map[schema.GroupVersionResource]bool),
+		stopChs:          make(map[schema.GroupVersionResource]chan struct{}),
 	}
 
 	// Apply all options
@@ -96,6 +100,8 @@ type metadataSharedInformerFactory struct {
 	// shuttingDown is true when Shutdown has been called. It may still be running
 	// because it needs to wait for goroutines.
 	shuttingDown bool
+	//
+	stopChs map[schema.GroupVersionResource]chan struct{}
 }
 
 var _ SharedInformerFactory = &metadataSharedInformerFactory{}
@@ -117,6 +123,12 @@ func (f *metadataSharedInformerFactory) ForResource(gvr schema.GroupVersionResou
 	return informer
 }
 
+func (f *metadataSharedInformerFactory) GetChan(gvr schema.GroupVersionResource) chan struct{} {
+	result := f.stopChs[gvr]
+
+	return result
+}
+
 // Start initializes all requested informers.
 func (f *metadataSharedInformerFactory) Start(stopCh <-chan struct{}) {
 	f.lock.Lock()
@@ -128,14 +140,20 @@ func (f *metadataSharedInformerFactory) Start(stopCh <-chan struct{}) {
 
 	for informerType, informer := range f.informers {
 		if !f.startedInformers[informerType] {
+			log.Printf("yyyyy metadataSharedInformerFactory.Start informerType: %s\n", informerType.String())
 			f.wg.Add(1)
 			// We need a new variable in each loop iteration,
 			// otherwise the goroutine would use the loop variable
 			// and that keeps changing.
 			informer := informer.Informer()
+
+			ch := make(chan struct{})
+			f.stopChs[informerType] = ch
+
 			go func() {
 				defer f.wg.Done()
-				informer.Run(stopCh)
+				//informer.Run(stopCh)
+				informer.Run(ch)
 			}()
 			f.startedInformers[informerType] = true
 		}

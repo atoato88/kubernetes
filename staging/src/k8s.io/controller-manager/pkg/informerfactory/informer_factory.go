@@ -26,11 +26,16 @@ import (
 type InformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (informers.GenericInformer, error)
 	Start(stopCh <-chan struct{})
+	Meta() metadatainformer.SharedInformerFactory
 }
 
 type informerFactory struct {
 	typedInformerFactory    informers.SharedInformerFactory
 	metadataInformerFactory metadatainformer.SharedInformerFactory
+}
+
+func (i *informerFactory) Meta() metadatainformer.SharedInformerFactory {
+	return i.metadataInformerFactory
 }
 
 func (i *informerFactory) ForResource(resource schema.GroupVersionResource) (informers.GenericInformer, error) {
