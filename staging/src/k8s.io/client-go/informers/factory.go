@@ -181,6 +181,11 @@ func (f *sharedInformerFactory) Shutdown() {
 	f.wg.Wait()
 }
 
+func (f *sharedInformerFactory) RemoveInformer(resource schema.GroupVersionResource) error {
+
+	return nil
+}
+
 func (f *sharedInformerFactory) WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool {
 	informers := func() map[reflect.Type]cache.SharedIndexInformer {
 		f.lock.Lock()
@@ -269,6 +274,8 @@ type SharedInformerFactory interface {
 	// Shutdown may be called multiple times, even concurrently. All such calls will
 	// block until all goroutines have terminated.
 	Shutdown()
+
+	RemoveInformer(resource schema.GroupVersionResource) error
 
 	// WaitForCacheSync blocks until all started informers' caches were synced
 	// or the stop channel gets closed.

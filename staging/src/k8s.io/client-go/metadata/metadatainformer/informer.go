@@ -191,6 +191,12 @@ func (f *metadataSharedInformerFactory) Shutdown() {
 	f.shuttingDown = true
 }
 
+func (f *metadataSharedInformerFactory) RemoveInformer(resource schema.GroupVersionResource) error {
+	delete(f.informers, resource)
+	delete(f.startedInformers, resource)
+	return nil
+}
+
 // NewFilteredMetadataInformer constructs a new informer for a metadata type.
 func NewFilteredMetadataInformer(client metadata.Interface, gvr schema.GroupVersionResource, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions TweakListOptionsFunc) informers.GenericInformer {
 	return &metadataInformer{

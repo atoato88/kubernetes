@@ -20,13 +20,16 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/metadata/metadatainformer"
+
+	"log"
 )
 
 // InformerFactory creates informers for each group version resource.
 type InformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (informers.GenericInformer, error)
 	Start(stopCh <-chan struct{})
-	Meta() metadatainformer.SharedInformerFactory
+	GetMetadataInformers() metadatainformer.SharedInformerFactory
+	RemoveInformer(resource schema.GroupVersionResource) error
 }
 
 type informerFactory struct {
@@ -34,8 +37,18 @@ type informerFactory struct {
 	metadataInformerFactory metadatainformer.SharedInformerFactory
 }
 
-func (i *informerFactory) Meta() metadatainformer.SharedInformerFactory {
+func (i *informerFactory) GetMetadataInformers() metadatainformer.SharedInformerFactory {
 	return i.metadataInformerFactory
+}
+
+func (i *informerFactory) RemoveInformer(resource schema.GroupVersionResource) error {
+	// Removes an informer contained in the metadataInformerFactory.
+	_, err := i.typedInformerFactory.ForResource(resource)
+	if err != nil {
+		log.Printf("remove informer from metadataInformerFactory: %s", resource.String())
+		return i.metadataInformerFactory.RemoveInformer(resource)
+	}
+	return nil
 }
 
 func (i *informerFactory) ForResource(resource schema.GroupVersionResource) (informers.GenericInformer, error) {

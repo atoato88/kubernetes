@@ -291,10 +291,11 @@ func (gb *GraphBuilder) syncMonitors(logger klog.Logger, resources map[schema.Gr
 
 	//for monitorType, monitor := range toRemove {
 	for monitorType, monitor := range toRemove {
-		ch := gb.sharedInformers.Meta().GetChan(monitorType)
+		ch := gb.sharedInformers.GetMetadataInformers().GetChan(monitorType)
 		if strings.Contains(strings.ToLower(monitorType.String()), "dummybook") {
 			logger.V(1).Info("yyyyy close ch for dummybook")
 			close(ch)
+			gb.sharedInformers.RemoveInformer(monitorType)
 			//close(monitor.stopCh)
 		} else {
 			close(monitor.stopCh)

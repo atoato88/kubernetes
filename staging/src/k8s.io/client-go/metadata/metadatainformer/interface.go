@@ -47,6 +47,8 @@ type SharedInformerFactory interface {
 	// block until all goroutines have terminated.
 	Shutdown()
 
+	RemoveInformer(resource schema.GroupVersionResource) error
+
 	GetChan(gvr schema.GroupVersionResource) chan struct{}
 }
 
