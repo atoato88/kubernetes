@@ -291,11 +291,16 @@ func (gb *GraphBuilder) syncMonitors(logger klog.Logger, resources map[schema.Gr
 
 	//for monitorType, monitor := range toRemove {
 	for monitorType, monitor := range toRemove {
-		ch := gb.sharedInformers.GetMetadataInformers().GetChan(monitorType)
+		//TODO:MY: add logic for determine if the monitorType is CR of some CRD.
 		if strings.Contains(strings.ToLower(monitorType.String()), "dummybook") {
-			logger.V(1).Info("yyyyy close ch for dummybook")
-			close(ch)
-			gb.sharedInformers.RemoveInformer(monitorType)
+			ch := gb.sharedInformers.GetMetadataInformers().GetChan(monitorType)
+			if ch != nil {
+				logger.V(1).Info("yyyyy close ch for dummybook")
+				close(ch)
+				//gb.sharedInformers.RemoveInformer(monitorType)
+				// or call removeInformer in metadataInformers.
+				gb.sharedInformers.GetMetadataInformers().RemoveInformer(monitorType)
+			}
 			//close(monitor.stopCh)
 		} else {
 			close(monitor.stopCh)

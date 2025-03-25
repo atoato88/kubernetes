@@ -60,7 +60,7 @@ func NewFilteredSharedInformerFactory(client metadata.Interface, defaultResync t
 		informers:        map[schema.GroupVersionResource]informers.GenericInformer{},
 		startedInformers: make(map[schema.GroupVersionResource]bool),
 		tweakListOptions: tweakListOptions,
-		stopChs:          make(map[schema.GroupVersionResource]chan struct{}),
+		stopChans:        make(map[schema.GroupVersionResource]chan struct{}),
 	}
 }
 
@@ -72,7 +72,7 @@ func NewSharedInformerFactoryWithOptions(client metadata.Interface, defaultResyn
 		defaultResync:    defaultResync,
 		informers:        map[schema.GroupVersionResource]informers.GenericInformer{},
 		startedInformers: make(map[schema.GroupVersionResource]bool),
-		stopChs:          make(map[schema.GroupVersionResource]chan struct{}),
+		stopChans:        make(map[schema.GroupVersionResource]chan struct{}),
 	}
 
 	// Apply all options
@@ -101,7 +101,7 @@ type metadataSharedInformerFactory struct {
 	// because it needs to wait for goroutines.
 	shuttingDown bool
 	//
-	stopChs map[schema.GroupVersionResource]chan struct{}
+	stopChans map[schema.GroupVersionResource]chan struct{}
 }
 
 var _ SharedInformerFactory = &metadataSharedInformerFactory{}
@@ -124,9 +124,12 @@ func (f *metadataSharedInformerFactory) ForResource(gvr schema.GroupVersionResou
 }
 
 func (f *metadataSharedInformerFactory) GetChan(gvr schema.GroupVersionResource) chan struct{} {
-	result := f.stopChs[gvr]
-
-	return result
+	result, exist := f.stopChans[gvr]
+	if exist == true {
+		return result
+	} else {
+		return nil
+	}
 }
 
 // Start initializes all requested informers.
@@ -148,7 +151,7 @@ func (f *metadataSharedInformerFactory) Start(stopCh <-chan struct{}) {
 			informer := informer.Informer()
 
 			ch := make(chan struct{})
-			f.stopChs[informerType] = ch
+			f.stopChans[informerType] = ch
 
 			go func() {
 				defer f.wg.Done()
