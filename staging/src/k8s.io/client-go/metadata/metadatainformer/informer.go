@@ -161,6 +161,13 @@ func (f *metadataSharedInformerFactory) Start(stopCh <-chan struct{}) {
 			f.startedInformers[informerType] = true
 		}
 	}
+	go func(stopCh <-chan struct{}) {
+		// Close all channels if stopCh is closed.
+		<-stopCh
+		for _, ch := range f.stopChans {
+			close(ch)
+		}
+	}(stopCh)
 }
 
 // WaitForCacheSync waits for all started informers' cache were synced.
