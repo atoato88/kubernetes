@@ -29,7 +29,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 
-	"github.com/k0kubun/pp/v3"
+	//"github.com/k0kubun/pp/v3"
 )
 
 // DeleteFlags composes common printer flag structs
@@ -54,8 +54,8 @@ type DeleteFlags struct {
 }
 
 func (f *DeleteFlags) ToOptions(dynamicClient dynamic.Interface, streams genericiooptions.IOStreams) (*DeleteOptions, error) {
-	pp.Print("zzzzzzzzzzz")
-	pp.Print(f.CascadingStrategy)
+	//pp.Print("zzzzzzzzzzz")
+	//pp.Print(f.CascadingStrategy)
 
 	options := &DeleteOptions{
 		DynamicClient: dynamicClient,
@@ -84,8 +84,8 @@ func (f *DeleteFlags) ToOptions(dynamicClient dynamic.Interface, streams generic
 	if f.AllNamespaces != nil {
 		options.DeleteAllNamespaces = *f.AllNamespaces
 	}
-	pp.Print("aaaaaaaaaaaa")
-	pp.Print(f.CascadingStrategy)
+	//pp.Print("aaaaaaaaaaaa")
+	//pp.Print(f.CascadingStrategy)
 	if f.CascadingStrategy != nil {
 		var err error
 		options.CascadingStrategy, err = parseCascadingFlag(streams, *f.CascadingStrategy)
@@ -93,8 +93,8 @@ func (f *DeleteFlags) ToOptions(dynamicClient dynamic.Interface, streams generic
 			return nil, err
 		}
 	}
-	pp.Print("bbbbbbbbb")
-	pp.Print(options.CascadingStrategy)
+	//pp.Print("bbbbbbbbb")
+	//pp.Print(options.CascadingStrategy)
 	if f.Force != nil {
 		options.ForceDeletion = *f.Force
 	}
@@ -145,7 +145,7 @@ func (f *DeleteFlags) AddFlags(cmd *cobra.Command) {
 			f.CascadingStrategy,
 			"cascade",
 			*f.CascadingStrategy,
-			`Must be "background", "orphan", or "foreground". Selects the deletion cascading strategy for the dependents (e.g. Pods created by a ReplicationController). Defaults to background.`)
+			`Must be "background", "orphan", "foreground", or "none". Selects the deletion cascading strategy for the dependents (e.g. Pods created by a ReplicationController). Defaults to background.`)
 		cmd.Flags().Lookup("cascade").NoOptDefVal = "background"
 	}
 	if f.Now != nil {
@@ -256,8 +256,10 @@ func parseCascadingFlag(streams genericiooptions.IOStreams, cascadingFlag string
 			return metav1.DeletePropagationForeground, nil
 		case "background":
 			return metav1.DeletePropagationBackground, nil
+		case "none":
+			return metav1.DeletePropagationNone, nil
 		default:
-			return metav1.DeletePropagationBackground, fmt.Errorf(`invalid cascade value (%v). Must be "background", "foreground", or "orphan"`, cascadingFlag)
+			return metav1.DeletePropagationBackground, fmt.Errorf(`invalid cascade value (%v). Must be "background", "foreground", "orphan" or "none"`, cascadingFlag)
 		}
 	}
 	// The flag was a boolean

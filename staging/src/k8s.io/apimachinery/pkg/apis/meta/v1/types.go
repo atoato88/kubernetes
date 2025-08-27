@@ -492,6 +492,9 @@ const (
 	// finalizer on the object, and sets its deletionTimestamp.  This policy is
 	// cascading, i.e., the dependents will be deleted with Foreground.
 	DeletePropagationForeground DeletionPropagation = "Foreground"
+	// Does not specify any propagation policies.
+	// This is intended to be used when metadata.finalizers in kubernetes resource is pre-set.
+	DeletePropagationNone DeletionPropagation = "None"
 )
 
 const (

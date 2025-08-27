@@ -147,7 +147,12 @@ func hasExpectedPropagationPolicy(body io.ReadCloser, policy *metav1.DeletionPro
 	rawBody, _ := io.ReadAll(body)
 	json.Unmarshal(rawBody, &parsedBody)
 	if parsedBody.PropagationPolicy == nil {
-		return false
+		if *policy == metav1.DeletePropagationNone {
+			// Body does not have the PropagationPolicy field if DeletePropagationNone is set.
+			return true
+		} else {
+			return false
+		}
 	}
 	return *policy == *parsedBody.PropagationPolicy
 }
@@ -209,6 +214,19 @@ func TestCascadingStrategy(t *testing.T) {
 	cmd = NewCmdDelete(tf, streams)
 	cmd.Flags().Set("namespace", "test")
 	cmd.Flags().Set("cascade", "orphan")
+	cmd.Flags().Set("output", "name")
+	cmd.Run(cmd, []string{"secrets/mysecret"})
+	if buf.String() != "secret/mysecret\n" {
+		t.Errorf("unexpected output: %s", buf.String())
+	}
+
+	// DeleteOptions.PropagationPolicy should be None, when cascading strategy is none.
+	nonePolicy := metav1.DeletePropagationNone
+	policy = &nonePolicy
+	streams, _, buf, _ = genericiooptions.NewTestIOStreams()
+	cmd = NewCmdDelete(tf, streams)
+	cmd.Flags().Set("namespace", "test")
+	cmd.Flags().Set("cascade", "none")
 	cmd.Flags().Set("output", "name")
 	cmd.Run(cmd, []string{"secrets/mysecret"})
 	if buf.String() != "secret/mysecret\n" {

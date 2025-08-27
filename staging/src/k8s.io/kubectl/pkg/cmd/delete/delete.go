@@ -42,7 +42,7 @@ import (
 	"k8s.io/kubectl/pkg/util/templates"
 	"k8s.io/kubectl/pkg/util/term"
 
-	"github.com/k0kubun/pp/v3"
+	//"github.com/k0kubun/pp/v3"
 )
 
 var (
@@ -147,8 +147,8 @@ type DeleteOptions struct {
 
 func NewCmdDelete(f cmdutil.Factory, streams genericiooptions.IOStreams) *cobra.Command {
 	deleteFlags := NewDeleteCommandFlags("containing the resource to delete.")
-	pp.Println("111111111")
-	pp.Println(deleteFlags)
+	//pp.Println("111111111")
+	//pp.Println(deleteFlags)
 
 	cmd := &cobra.Command{
 		Use:                   "delete ([-f FILENAME] | [-k DIRECTORY] | TYPE [(NAME | -l label | --all)])",
@@ -158,8 +158,8 @@ func NewCmdDelete(f cmdutil.Factory, streams genericiooptions.IOStreams) *cobra.
 		Example:               deleteExample,
 		ValidArgsFunction:     completion.ResourceTypeAndNameCompletionFunc(f),
 		Run: func(cmd *cobra.Command, args []string) {
-			pp.Println("2222222")
-			pp.Print(deleteFlags)
+			//pp.Println("2222222")
+			//pp.Print(deleteFlags)
 
 			o, err := deleteFlags.ToOptions(nil, streams)
 			cmdutil.CheckErr(err)
@@ -170,12 +170,12 @@ func NewCmdDelete(f cmdutil.Factory, streams genericiooptions.IOStreams) *cobra.
 		SuggestFor: []string{"rm"},
 	}
 
-	pp.Println("33333")
-	pp.Println(deleteFlags)
+	//pp.Println("33333")
+	//pp.Println(deleteFlags)
 	deleteFlags.AddFlags(cmd)
 	cmdutil.AddDryRunFlag(cmd)
-	pp.Println("44444")
-	pp.Println(deleteFlags)
+	//pp.Println("44444")
+	//pp.Println(deleteFlags)
 
 	return cmd
 }
@@ -223,8 +223,8 @@ func (o *DeleteOptions) Complete(f cmdutil.Factory, args []string, cmd *cobra.Co
 		return nil
 	}
 
-	pp.Println("in Complete")
-	pp.Println(o)
+	//pp.Println("in Complete")
+	//pp.Println(o)
 
 	r := f.NewBuilder().
 		Unstructured().
@@ -409,7 +409,12 @@ func (o *DeleteOptions) DeleteResult(r *resource.Result) error {
 		if o.GracePeriod >= 0 {
 			options = metav1.NewDeleteOptions(int64(o.GracePeriod))
 		}
-		options.PropagationPolicy = &o.CascadingStrategy
+
+		if o.CascadingStrategy == metav1.DeletePropagationNone {
+			options.PropagationPolicy = nil
+		} else {
+			options.PropagationPolicy = &o.CascadingStrategy
+		}
 
 		if warnClusterScope && info.Mapping.Scope.Name() == meta.RESTScopeNameRoot {
 			o.WarningPrinter.Print("deleting cluster-scoped resources, not scoped to the provided namespace")
@@ -493,9 +498,9 @@ func (o *DeleteOptions) DeleteResult(r *resource.Result) error {
 
 func (o *DeleteOptions) deleteResource(info *resource.Info, deleteOptions *metav1.DeleteOptions) (runtime.Object, error) {
 	
-	pp.Println("xxxxxxx set PropagationPolicy to nil")
-	deleteOptions.PropagationPolicy = nil
-	pp.Printf("xxxxxx PropagationPolicy: %v\n", deleteOptions.PropagationPolicy)
+	//pp.Println("xxxxxxx set PropagationPolicy to nil")
+	//deleteOptions.PropagationPolicy = nil
+	//pp.Printf("xxxxxx PropagationPolicy: %v\n", deleteOptions.PropagationPolicy)
 
 
 	deleteResponse, err := resource.
