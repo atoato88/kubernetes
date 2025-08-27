@@ -28,8 +28,6 @@ import (
 	"k8s.io/cli-runtime/pkg/genericiooptions"
 	"k8s.io/client-go/dynamic"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
-
-	//"github.com/k0kubun/pp/v3"
 )
 
 // DeleteFlags composes common printer flag structs
@@ -54,9 +52,6 @@ type DeleteFlags struct {
 }
 
 func (f *DeleteFlags) ToOptions(dynamicClient dynamic.Interface, streams genericiooptions.IOStreams) (*DeleteOptions, error) {
-	//pp.Print("zzzzzzzzzzz")
-	//pp.Print(f.CascadingStrategy)
-
 	options := &DeleteOptions{
 		DynamicClient: dynamicClient,
 		IOStreams:     streams,
@@ -84,8 +79,6 @@ func (f *DeleteFlags) ToOptions(dynamicClient dynamic.Interface, streams generic
 	if f.AllNamespaces != nil {
 		options.DeleteAllNamespaces = *f.AllNamespaces
 	}
-	//pp.Print("aaaaaaaaaaaa")
-	//pp.Print(f.CascadingStrategy)
 	if f.CascadingStrategy != nil {
 		var err error
 		options.CascadingStrategy, err = parseCascadingFlag(streams, *f.CascadingStrategy)
@@ -93,8 +86,6 @@ func (f *DeleteFlags) ToOptions(dynamicClient dynamic.Interface, streams generic
 			return nil, err
 		}
 	}
-	//pp.Print("bbbbbbbbb")
-	//pp.Print(options.CascadingStrategy)
 	if f.Force != nil {
 		options.ForceDeletion = *f.Force
 	}
