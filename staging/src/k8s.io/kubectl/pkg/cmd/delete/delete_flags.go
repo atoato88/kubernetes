@@ -167,7 +167,7 @@ func (f *DeleteFlags) AddFlags(cmd *cobra.Command) {
 
 // NewDeleteCommandFlags provides default flags and values for use with the "delete" command
 func NewDeleteCommandFlags(usage string) *DeleteFlags {
-	cascadingStrategy := "background"
+	cascadingStrategy := "none"
 	gracePeriod := -1
 
 	// setup command defaults
@@ -212,7 +212,7 @@ func NewDeleteCommandFlags(usage string) *DeleteFlags {
 
 // NewDeleteFlags provides default flags and values for use in commands outside of "delete"
 func NewDeleteFlags(usage string) *DeleteFlags {
-	cascadingStrategy := "background"
+	cascadingStrategy := "none"
 	gracePeriod := -1
 
 	force := false
