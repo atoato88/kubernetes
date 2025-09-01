@@ -182,9 +182,9 @@ func TestCascadingStrategy(t *testing.T) {
 		}),
 	}
 
-	// DeleteOptions.PropagationPolicy should be Background, when cascading strategy is empty (default).
-	backgroundPolicy := metav1.DeletePropagationBackground
-	policy = &backgroundPolicy
+	// DeleteOptions.PropagationPolicy should be None, when cascading strategy is empty (default).
+	defaultPolicy := metav1.DeletePropagationNone
+	policy = &defaultPolicy
 	streams, _, buf, _ := genericiooptions.NewTestIOStreams()
 	cmd := NewCmdDelete(tf, streams)
 	cmd.Flags().Set("namespace", "test")
